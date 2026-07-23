@@ -1,12 +1,18 @@
 # Archidekt Plus (Firefox extension)
 
-Adds two things to Archidekt's in-deck "Card search" panel (the "Archidekt
-search" tab, under **Filter & Sort**), which natively supports neither:
+Adds three things to Archidekt:
 
-- **Oracle tag search** — a searchable field backed by the ~5,300 tags
-  documented at [scryfall.com/docs/tagger-tags](https://scryfall.com/docs/tagger-tags)
-  (the `otag:`/`function:` operator).
-- **Sort by release date** — oldest-first or newest-first.
+- **Oracle tag search** — a searchable field, under **Filter & Sort** in the
+  in-deck "Card search" panel (the "Archidekt search" tab), backed by the
+  ~5,300 tags documented at
+  [scryfall.com/docs/tagger-tags](https://scryfall.com/docs/tagger-tags)
+  (the `otag:`/`function:` operator). Archidekt supports neither this nor
+  the next item natively.
+- **Sort by release date** — oldest-first or newest-first, also under
+  Filter & Sort.
+- **Oracle tags in this deck** — a section on the deck view itself listing
+  every Scryfall Oracle tag present among the deck's cards, with a click to
+  see which cards carry it.
 
 ## How it works
 
@@ -44,6 +50,19 @@ class names that can change on any deploy), the extension:
 4. When neither control is set, every request passes through untouched —
    this is purely opt-in and never changes default behavior.
 
+The **"Oracle tags in this deck"** feature works differently, and needs
+neither a page-context script nor any `fetch` patching: Archidekt's own
+`/api/decks/<id>/cards/` endpoint already returns each card's Scryfall
+`oTags`/`inheritedTags`, computed server-side, so `content/deck-tags.js`
+(an isolated-world content script) just calls that endpoint directly with an
+ordinary `fetch()` — same-origin, so it carries the viewer's session cookies
+automatically — and renders a small panel listing every tag present in the
+deck, docked below the "Add card" / "View as" / "Sort by" filter bar above
+the card grid. (The deck's own info sidebar, showing "Est cost:" etc., turned
+out to be `position: fixed`, which made content inserted there behave
+unpredictably — the filter bar above the card grid is normal document flow
+and a more reliable anchor.)
+
 Color and rarity filters are preserved on a best-effort basis: they're only
 translated into the rebuilt query (as `id<=...` / `(rarity:x or rarity:y)`
 clauses) when the user has actually narrowed them from "all selected" —
@@ -63,6 +82,10 @@ Firefox only loads unsigned extensions temporarily (until restart):
 
 ## Known limitations
 
+- The "Oracle tags in this deck" panel reflects the deck's contents as of
+  the last page load or the panel's own "Refresh" click — edits made via
+  the search modal (add/remove/quantity change) won't appear until
+  Refresh is clicked; there's no live tracking of deck mutations.
 - One oracle tag at a time (no multi-tag OR search yet).
 - The oracle-tag field is a native HTML `<datalist>` — it suggests from the
   bundled list but doesn't hard-block free text, so typos won't be caught
@@ -77,6 +100,11 @@ Firefox only loads unsigned extensions temporarily (until restart):
 
 ## Changelog
 
+- **0.2.0** — Added "Oracle tags in this deck", a deck-view panel listing
+  every Scryfall Oracle tag present among the deck's cards, with a click to
+  see the matching cards. Also declared `data_collection_permissions` and
+  bumped `strict_min_version` to 142.0, both required for current AMO
+  submissions.
 - **0.1.1** — Fixed the extension controls having no effect on search
   results. The controls were relaying their values from `content.js`
   (isolated world) to `page-hook.js` (page world) via a `CustomEvent`, but

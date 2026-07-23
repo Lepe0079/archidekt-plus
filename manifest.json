@@ -1,19 +1,22 @@
 {
   "manifest_version": 3,
   "name": "Archidekt Plus",
-  "version": "0.1.1",
-  "description": "Adds Oracle-tag search and release-date sorting to Archidekt's in-deck card search.",
+  "version": "0.2.0",
+  "description": "Adds Oracle-tag search, release-date sorting, and a deck-wide Oracle tag browser to Archidekt.",
   "browser_specific_settings": {
     "gecko": {
       "id": "archidekt-plus@local.ext",
-      "strict_min_version": "115.0"
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "host_permissions": ["https://archidekt.com/*"],
   "content_scripts": [
     {
       "matches": ["https://archidekt.com/*"],
-      "js": ["content/content.js"],
+      "js": ["content/content.js", "content/deck-tags.js"],
       "run_at": "document_start"
     }
   ],
